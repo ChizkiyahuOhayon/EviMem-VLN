@@ -1,0 +1,13 @@
+{
+  "carrier": "sparse",
+  "token_cap": "B_t",
+  "horizon": 32,
+  "resident_slots": 2048,
+  "token_budget": null,
+  "equal_token_quota": null,
+  "cell_size": 0.25,
+  "grid_size": 80,
+  "feature_dim": 1152,
+  "ring_capacity": 33,
+  "seed": 0
+}
