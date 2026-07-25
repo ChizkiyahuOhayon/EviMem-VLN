@@ -57,5 +57,7 @@ each experiment; do not run Habitat directly against a slow network filesystem.
 - MP3D scenes remain governed by Matterport3D Terms.
 - VGGT-1B is CC-BY-NC-4.0.
 - The GA-VLN checkpoint/model card does not currently state a license.
+- The imported GA-VLN source at the fixed commit also has no standard license;
+  see `UPSTREAM.md` for the project-specific authorization record.
 
 Do not upload any external model or dataset into this Git repository.

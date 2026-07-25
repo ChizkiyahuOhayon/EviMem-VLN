@@ -48,4 +48,6 @@ else
 fi
 
 echo "Environment ready: ${ENV_NAME}"
-echo "Activate it, then run: bash scripts/bootstrap_ga_vln.sh"
+echo "Activate it, then run:"
+echo "  python -m pip install -r requirements.txt"
+echo "  python -m pip install -e ."

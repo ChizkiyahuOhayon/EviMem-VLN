@@ -9,43 +9,41 @@
 | torchvision | 0.16.2 |
 | CUDA userspace / nvcc | 12.1 |
 | Habitat-Sim | 0.2.4, headless + Bullet |
-| Habitat-Lab | v0.2.4 (`1639e1ae732ba1e84199a1a04b79c7243c3f8586`) |
-| GA-VLN | `cc6086b7081a346695abecf6821f827e2db44a43` |
+| Habitat-Lab/Baselines | commit `1639e1ae732ba1e84199a1a04b79c7243c3f8586` |
+| GA-VLN source | internal fork of `cc6086b7081a346695abecf6821f827e2db44a43` |
 
-CUDA 12.1 matches the official GA-VLN PyTorch wheels. The host driver may be
-newer; do not downgrade a working cluster driver merely to match the userspace
-toolkit.
-
-Conda or Micromamba is required because Habitat-Sim 0.2.4 is installed from
-the `aihabitat`/`conda-forge` channels. A plain Python `venv` is not the
-supported deployment path.
+CUDA 12.1 matches the upstream GA-VLN PyTorch wheels. A newer compatible host
+driver is expected. Conda or Micromamba is used because Habitat-Sim 0.2.4 is
+provided through the `aihabitat`/`conda-forge` channels.
 
 ## Commands
 
 ```bash
 bash scripts/create_env.sh
 conda activate evimem
-bash scripts/bootstrap_ga_vln.sh --workspace /local_nvme/$USER/evimem-runtime
+python -m pip install -r requirements.txt
+python -m pip install \
+  "habitat-lab @ git+https://github.com/facebookresearch/habitat-lab.git@1639e1ae732ba1e84199a1a04b79c7243c3f8586#subdirectory=habitat-lab" \
+  "habitat-baselines @ git+https://github.com/facebookresearch/habitat-lab.git@1639e1ae732ba1e84199a1a04b79c7243c3f8586#subdirectory=habitat-baselines"
+python -m pip install -e .
 ```
 
-`bootstrap_ga_vln.sh` refuses to change a dirty existing baseline checkout. It
-installs GA-VLN requirements only after PyTorch is present and installs
-FlashAttention with `--no-build-isolation`. A host C++ compiler (`g++`) is also
-required; `cuda-nvcc=12.1` is included in the Conda environment.
+No GA-VLN checkout is created by these commands. FlashAttention 2.5.8 builds
+against the PyTorch/CUDA environment and requires `nvcc`, `ninja`, and a C++
+compiler. If build isolation fails, install it after the rest:
 
-## Driver check
+```bash
+python -m pip install -r requirements.txt --no-deps
+MAX_JOBS=4 python -m pip install --no-build-isolation flash-attn==2.5.8
+```
 
 Before downloading large assets:
 
 ```bash
 nvidia-smi
 python -c 'import torch; print(torch.__version__, torch.version.cuda, torch.cuda.get_device_name(0))'
+python -m gavln.gavln_eval --help
 ```
 
-Expected PyTorch/CUDA output is `2.1.2` and `12.1`. Both A40s should be visible.
-
-## Why not install the latest stack?
-
-Habitat, Transformers, FlashAttention, and GA-VLN are tightly coupled. Upgrading
-one component before G0 would change the baseline and make a reproduction
-failure hard to diagnose. Modernization belongs in a separate, post-G0 branch.
+Expected PyTorch/CUDA versions are `2.1.2` and `12.1`. Both A40s should be
+visible. Stage assets from slow NAS to local NVMe before Habitat evaluation.
