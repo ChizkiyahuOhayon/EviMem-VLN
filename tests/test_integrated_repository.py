@@ -57,10 +57,15 @@ class RepositoryIntegrationTests(unittest.TestCase):
         installer = (REPO_ROOT / "scripts" / "create_env.sh").read_text(
             encoding="utf-8"
         )
+        requirements = (REPO_ROOT / "requirements.txt").read_text(
+            encoding="utf-8"
+        )
         self.assertNotIn("pytorch-cuda", environment)
         self.assertNotIn("numpy=1.26.1", environment)
         self.assertIn("torch==2.1.2", installer)
         self.assertIn("https://download.pytorch.org/whl/cu121", installer)
+        self.assertIn("av==14.0.0", requirements)
+        self.assertNotIn("av==14.4.0", requirements)
 
     def test_no_external_ga_vln_runtime_dependency(self):
         self.assertFalse((REPO_ROOT / ".gitmodules").exists())

@@ -61,3 +61,7 @@ bash scripts/create_env.sh --update
 
 If no `evimem` environment was created, use the normal command without
 `--update`.
+
+The runtime pins PyAV 14.0.0 because it provides a CPython 3.9 manylinux wheel.
+Newer PyAV 14.4.0 falls back to a local FFmpeg 7 source build on Python 3.9 and
+is not required by the Habitat navigation evaluator.
