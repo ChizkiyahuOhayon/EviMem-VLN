@@ -48,7 +48,7 @@ else
 fi
 
 "${RUNNER[@]}" run --name "${ENV_NAME}" \
-  python -m pip install --upgrade "pip==24.0" wheel setuptools
+  python -m pip install --upgrade "pip==24.0" wheel "setuptools==69.5.1"
 "${RUNNER[@]}" run --name "${ENV_NAME}" \
   python -m pip install \
     "numpy==1.26.1" \
@@ -62,8 +62,9 @@ fi
     --index-url https://download.pytorch.org/whl/cu121
 "${RUNNER[@]}" run --name "${ENV_NAME}" \
   python -c 'import numpy, torch, torchvision; assert numpy.__version__ == "1.26.1"; assert torch.__version__.split("+")[0] == "2.1.2"; assert torch.version.cuda == "12.1"; assert torchvision.__version__.split("+")[0] == "0.16.2"; print("numpy", numpy.__version__, "torch", torch.__version__, "torchvision", torchvision.__version__, "cuda", torch.version.cuda)'
+"${RUNNER[@]}" run --name "${ENV_NAME}" \
+  bash "${REPO_ROOT}/scripts/install_runtime.sh"
 
 echo "Environment ready: ${ENV_NAME}"
-echo "Activate it, then run:"
-echo "  python -m pip install -r requirements.txt"
-echo "  python -m pip install -e ."
+echo "Activate it with:"
+echo "  ${RUNNER[0]} activate ${ENV_NAME}"

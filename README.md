@@ -31,21 +31,17 @@ cd EviMem-VLN
 bash scripts/create_env.sh
 conda activate evimem
 
-# create_env.sh installs NumPy and the official PyTorch 2.1.2/cu121 wheels.
-# Install the remaining GA-VLN runtime requirements.
-python -m pip install -r requirements.txt
-
 # Habitat-Lab/Baselines v0.2.4 may be installed from the official source:
 python -m pip install \
   "habitat-lab @ git+https://github.com/facebookresearch/habitat-lab.git@1639e1ae732ba1e84199a1a04b79c7243c3f8586#subdirectory=habitat-lab" \
   "habitat-baselines @ git+https://github.com/facebookresearch/habitat-lab.git@1639e1ae732ba1e84199a1a04b79c7243c3f8586#subdirectory=habitat-baselines"
 
-python -m pip install -e .
 ```
 
-`pip install -e .` installs `evimem`, `gavln`, `llava`, `trl`, and `vggt`
-from this repository. See [docs/INSTALL.md](docs/INSTALL.md) for FlashAttention
-and driver notes.
+`create_env.sh` installs the runtime requirements, FlashAttention 2.5.8, and
+the repository packages. For an existing environment, run
+`bash scripts/install_runtime.sh`. See [docs/INSTALL.md](docs/INSTALL.md) for
+FlashAttention and driver notes.
 
 ## External assets
 

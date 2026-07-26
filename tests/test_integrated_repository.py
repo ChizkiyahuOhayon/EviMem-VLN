@@ -60,12 +60,34 @@ class RepositoryIntegrationTests(unittest.TestCase):
         requirements = (REPO_ROOT / "requirements.txt").read_text(
             encoding="utf-8"
         )
+        flash_requirements = (
+            REPO_ROOT / "requirements-flash-attn.txt"
+        ).read_text(encoding="utf-8")
+        runtime_installer = (
+            REPO_ROOT / "scripts" / "install_runtime.sh"
+        ).read_text(encoding="utf-8")
+        constraints = (REPO_ROOT / "constraints-cu121.txt").read_text(
+            encoding="utf-8"
+        )
+        build_constraints = (
+            REPO_ROOT / "build-constraints.txt"
+        ).read_text(encoding="utf-8")
         self.assertNotIn("pytorch-cuda", environment)
         self.assertNotIn("numpy=1.26.1", environment)
         self.assertIn("torch==2.1.2", installer)
         self.assertIn("https://download.pytorch.org/whl/cu121", installer)
         self.assertIn("av==14.0.0", requirements)
         self.assertNotIn("av==14.4.0", requirements)
+        self.assertNotIn("wavedrom", requirements.lower())
+        self.assertNotIn("flash-attn", requirements)
+        self.assertIn("flash-attn==2.5.8", flash_requirements)
+        self.assertIn("--no-build-isolation", runtime_installer)
+        self.assertIn("constraints-cu121.txt", runtime_installer)
+        self.assertIn("build-constraints.txt", runtime_installer)
+        self.assertIn("torch==2.1.2", constraints)
+        self.assertIn("torchvision==0.16.2", constraints)
+        self.assertIn("setuptools==69.5.1", installer)
+        self.assertEqual(build_constraints.strip(), "setuptools==69.5.1")
 
     def test_no_external_ga_vln_runtime_dependency(self):
         self.assertFalse((REPO_ROOT / ".gitmodules").exists())
