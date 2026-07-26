@@ -31,7 +31,8 @@ cd EviMem-VLN
 bash scripts/create_env.sh
 conda activate evimem
 
-# GA-VLN runtime requirements; PyTorch is already supplied by the Conda env.
+# create_env.sh installs NumPy and the official PyTorch 2.1.2/cu121 wheels.
+# Install the remaining GA-VLN runtime requirements.
 python -m pip install -r requirements.txt
 
 # Habitat-Lab/Baselines v0.2.4 may be installed from the official source:

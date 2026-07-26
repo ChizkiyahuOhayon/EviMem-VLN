@@ -14,7 +14,10 @@
 
 CUDA 12.1 matches the upstream GA-VLN PyTorch wheels. A newer compatible host
 driver is expected. Conda or Micromamba is used because Habitat-Sim 0.2.4 is
-provided through the `aihabitat`/`conda-forge` channels.
+provided through the `aihabitat`/`conda-forge` channels. NumPy, PyTorch, and
+torchvision are installed by `create_env.sh` with pip after the Conda solve.
+This avoids dependence on Conda mirrors carrying the complete
+`pytorch-cuda`/`cuda-libraries` package chain.
 
 ## Commands
 
@@ -29,8 +32,10 @@ python -m pip install -e .
 ```
 
 No GA-VLN checkout is created by these commands. FlashAttention 2.5.8 builds
-against the PyTorch/CUDA environment and requires `nvcc`, `ninja`, and a C++
-compiler. If build isolation fails, install it after the rest:
+against the PyTorch/CUDA environment. Its installer may use a compatible
+prebuilt wheel; a source-build fallback requires `nvcc`, `ninja`, and a C++
+compiler. If build isolation fails, first verify `nvcc --version`, then install
+it after the rest:
 
 ```bash
 python -m pip install -r requirements.txt --no-deps
@@ -47,3 +52,12 @@ python -m gavln.gavln_eval --help
 
 Expected PyTorch/CUDA versions are `2.1.2` and `12.1`. Both A40s should be
 visible. Stage assets from slow NAS to local NVMe before Habitat evaluation.
+
+If a previous environment solve failed before this fix, rerun with:
+
+```bash
+bash scripts/create_env.sh --update
+```
+
+If no `evimem` environment was created, use the normal command without
+`--update`.

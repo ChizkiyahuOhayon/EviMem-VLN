@@ -50,6 +50,18 @@ class RepositoryIntegrationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             MemoryBackendConfig(name="evimem", token_budget=0)
 
+    def test_environment_avoids_conda_cuda_solver_chain(self):
+        environment = (
+            REPO_ROOT / "environment" / "environment-cu121.yml"
+        ).read_text(encoding="utf-8")
+        installer = (REPO_ROOT / "scripts" / "create_env.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("pytorch-cuda", environment)
+        self.assertNotIn("numpy=1.26.1", environment)
+        self.assertIn("torch==2.1.2", installer)
+        self.assertIn("https://download.pytorch.org/whl/cu121", installer)
+
     def test_no_external_ga_vln_runtime_dependency(self):
         self.assertFalse((REPO_ROOT / ".gitmodules").exists())
         forbidden = ("GA_VLN_ROOT", "sys.path.insert(", "bootstrap_ga_vln")
