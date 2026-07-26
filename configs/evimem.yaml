@@ -1,0 +1,5 @@
+memory_backend: evimem
+memory_horizon: 32
+memory_resident_slots: 2048
+memory_token_budget: 512
+memory_seed: 0

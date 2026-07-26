@@ -2,20 +2,16 @@
 set -euo pipefail
 
 ASSET_ROOT=""
-GA_VLN_ROOT=""
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 usage() {
-  echo "Usage: $0 --asset-root /nas/evimem-assets --ga-vln-root /local_nvme/GA-VLN"
+  echo "Usage: $0 --asset-root /nas/evimem-assets"
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --asset-root)
       ASSET_ROOT="$2"
-      shift 2
-      ;;
-    --ga-vln-root)
-      GA_VLN_ROOT="$2"
       shift 2
       ;;
     -h|--help)
@@ -30,7 +26,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ ! -d "${ASSET_ROOT}" || ! -d "${GA_VLN_ROOT}/.git" ]]; then
+if [[ ! -d "${ASSET_ROOT}" ]]; then
   usage >&2
   exit 2
 fi
@@ -40,7 +36,6 @@ if ! command -v rsync >/dev/null 2>&1; then
 fi
 
 ASSET_ROOT="$(cd "${ASSET_ROOT}" && pwd)"
-GA_VLN_ROOT="$(cd "${GA_VLN_ROOT}" && pwd)"
 
 RELATIVE_PATHS=(
   checkpoints/gavln_official
@@ -53,7 +48,7 @@ RELATIVE_PATHS=(
 
 for relative in "${RELATIVE_PATHS[@]}"; do
   source_path="${ASSET_ROOT}/${relative}"
-  target_path="${GA_VLN_ROOT}/${relative}"
+  target_path="${REPO_ROOT}/${relative}"
   if [[ ! -d "${source_path}" ]]; then
     echo "Skip missing optional/unavailable asset: ${source_path}"
     continue
@@ -63,4 +58,4 @@ for relative in "${RELATIVE_PATHS[@]}"; do
     "${source_path}/" "${target_path}/"
 done
 
-python -m evimem.cli verify-assets --ga-vln-root "${GA_VLN_ROOT}"
+python -m evimem.cli verify-assets

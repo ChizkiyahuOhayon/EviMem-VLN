@@ -9,43 +9,60 @@
 | torchvision | 0.16.2 |
 | CUDA userspace / nvcc | 12.1 |
 | Habitat-Sim | 0.2.4, headless + Bullet |
-| Habitat-Lab | v0.2.4 (`1639e1ae732ba1e84199a1a04b79c7243c3f8586`) |
-| GA-VLN | `cc6086b7081a346695abecf6821f827e2db44a43` |
+| Habitat-Lab/Baselines | commit `1639e1ae732ba1e84199a1a04b79c7243c3f8586` |
+| GA-VLN source | internal fork of `cc6086b7081a346695abecf6821f827e2db44a43` |
 
-CUDA 12.1 matches the official GA-VLN PyTorch wheels. The host driver may be
-newer; do not downgrade a working cluster driver merely to match the userspace
-toolkit.
-
-Conda or Micromamba is required because Habitat-Sim 0.2.4 is installed from
-the `aihabitat`/`conda-forge` channels. A plain Python `venv` is not the
-supported deployment path.
+CUDA 12.1 matches the upstream GA-VLN PyTorch wheels. A newer compatible host
+driver is expected. Conda or Micromamba is used because Habitat-Sim 0.2.4 is
+provided through the `aihabitat`/`conda-forge` channels. NumPy, PyTorch, and
+torchvision are installed by `create_env.sh` with pip after the Conda solve.
+This avoids dependence on Conda mirrors carrying the complete
+`pytorch-cuda`/`cuda-libraries` package chain.
 
 ## Commands
 
 ```bash
 bash scripts/create_env.sh
 conda activate evimem
-bash scripts/bootstrap_ga_vln.sh --workspace /local_nvme/$USER/evimem-runtime
+python -m pip install \
+  "habitat-lab @ git+https://github.com/facebookresearch/habitat-lab.git@1639e1ae732ba1e84199a1a04b79c7243c3f8586#subdirectory=habitat-lab" \
+  "habitat-baselines @ git+https://github.com/facebookresearch/habitat-lab.git@1639e1ae732ba1e84199a1a04b79c7243c3f8586#subdirectory=habitat-baselines"
 ```
 
-`bootstrap_ga_vln.sh` refuses to change a dirty existing baseline checkout. It
-installs GA-VLN requirements only after PyTorch is present and installs
-FlashAttention with `--no-build-isolation`. A host C++ compiler (`g++`) is also
-required; `cuda-nvcc=12.1` is included in the Conda environment.
+No GA-VLN checkout is created by these commands. FlashAttention 2.5.8 builds
+against the PyTorch/CUDA environment. Its installer may use a compatible
+prebuilt wheel; a source-build fallback requires `nvcc`, `ninja`, and a C++
+compiler. It is installed with the upstream-required `--no-build-isolation`
+flag by `scripts/install_runtime.sh`. To repair or update an existing
+environment, run:
 
-## Driver check
+```bash
+bash scripts/install_runtime.sh
+```
 
 Before downloading large assets:
 
 ```bash
 nvidia-smi
 python -c 'import torch; print(torch.__version__, torch.version.cuda, torch.cuda.get_device_name(0))'
+python -m gavln.gavln_eval --help
 ```
 
-Expected PyTorch/CUDA output is `2.1.2` and `12.1`. Both A40s should be visible.
+Expected PyTorch/CUDA versions are `2.1.2` and `12.1`. Both A40s should be
+visible. Stage assets from slow NAS to local NVMe before Habitat evaluation.
 
-## Why not install the latest stack?
+If a previous environment solve failed before this fix, rerun with:
 
-Habitat, Transformers, FlashAttention, and GA-VLN are tightly coupled. Upgrading
-one component before G0 would change the baseline and make a reproduction
-failure hard to diagnose. Modernization belongs in a separate, post-G0 branch.
+```bash
+bash scripts/create_env.sh --update
+```
+
+If no `evimem` environment was created, use the normal command without
+`--update`.
+
+The runtime pins PyAV 14.0.0 because it provides a CPython 3.9 manylinux wheel.
+Newer PyAV 14.4.0 falls back to a local FFmpeg 7 source build on Python 3.9 and
+is not required by the Habitat navigation evaluator.
+
+WaveDrom, svgwrite, and latex2mathml were removed from the runtime requirements:
+they are documentation tools and are not imported by the GA-VLN or EviMem code.

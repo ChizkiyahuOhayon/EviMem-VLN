@@ -1,0 +1,5 @@
+memory_backend: gavln
+memory_horizon: 32
+memory_resident_slots: 2048
+memory_token_budget: null
+memory_seed: 0

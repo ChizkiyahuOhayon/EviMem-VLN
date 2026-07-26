@@ -1,25 +1,14 @@
 name: evimem
 channels:
-  - pytorch
-  - nvidia
   - conda-forge
   - aihabitat
 dependencies:
   - python=3.9
-  - pip=24.0
+  - pip
   - cmake>=3.14
   - git
   - git-lfs
   - ninja
-  - numpy=1.26.1
-  - pytorch=2.1.2
-  - torchvision=0.16.2
-  - pytorch-cuda=12.1
-  - cuda-nvcc=12.1
   - habitat-sim=0.2.4
   - withbullet
   - headless
-  - pip:
-      - gdown==5.2.0
-      - huggingface-hub==0.23.2
-      - hf-transfer==0.1.9

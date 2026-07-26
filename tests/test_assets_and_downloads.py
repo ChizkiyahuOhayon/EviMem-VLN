@@ -67,7 +67,7 @@ class AssetVerificationTests(unittest.TestCase):
             self.assertEqual(statuses["rxr_vlnce"], "missing")
             self.assertTrue(all(statuses[name] == "ok" for name in statuses if name != "rxr_vlnce"))
             with contextlib.redirect_stdout(io.StringIO()):
-                result = main(["verify-assets", "--ga-vln-root", str(root)])
+                result = main(["verify-assets", "--project-root", str(root)])
             self.assertEqual(result, 0)
 
     def test_empty_or_missing_assets_fail_closed(self):
@@ -80,7 +80,7 @@ class AssetVerificationTests(unittest.TestCase):
             status = {item["name"]: item["status"] for item in report["checks"]}
             self.assertEqual(status["vggt"], "invalid")
             with contextlib.redirect_stdout(io.StringIO()):
-                result = main(["verify-assets", "--ga-vln-root", str(root), "--json"])
+                result = main(["verify-assets", "--project-root", str(root), "--json"])
             self.assertEqual(result, 2)
 
 

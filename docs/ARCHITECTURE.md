@@ -1,44 +1,50 @@
-# Architecture and integration boundary
+# Architecture and production integration
 
-## Baseline-preserving design
-
-The only authorized memory interface is:
+`GAVLNForCausalLM.encode_images` is the single memory integration boundary:
 
 ```text
-observations
-  → world-key packets
-  → fixed resident ledger
-  → agent-centric 80×80 memory grid
-  → deterministic token selector
-  → original GA-VLN pos_encoding / mm_projector / memory token path
+SigLIP/VGGT patches + world coordinates + current pose
+  → MemoryBackend.build_tokens
+  → occupied agent-centric BEV features and flat cell indices
+  → original GA-VLN positional encoding
+  → original mm_projector
+  → original <memory> token / Qwen path
 ```
 
-The policy, prompt, tokenizer, action parser, front-view tokens, and evaluator
-remain baseline-owned.
+`gavln` reconstructs the upstream windowed, agent-centric 80×80 scatter mean.
+`evimem` first updates a persistent world-coordinate ledger, then rasterizes its
+resident cells into the same agent-centric 80×80 readout. The downstream model
+is shared; there are not two copies of GA-VLN.
 
-## Current package
+## EviMem lifecycle
 
-`evimem.phase0` is an asset-free reference implementation. It deliberately
-avoids importing Torch, Transformers, or Habitat at package import time, which
-makes core contracts testable in CI.
+At every GA-VLN observation/generation event, `gavln/eval_runtime.py` supplies:
 
-The reference core covers:
+- selected SigLIP and VGGT features;
+- corresponding patch world coordinates;
+- monotonic observation IDs and executed-action steps;
+- current agent position and rotation;
+- evaluator environment ID.
 
-1. observation lifecycle and bounded storage;
-2. world-cell packet updates and deterministic admission;
-3. rasterization, evidence incidence, and output order;
-4. corruption traces and evaluator-only metadata separation;
-5. manifests and resume safety.
+Each environment owns one backend instance. `reset_episode` clears its ledger
+and language cache. `reset_for_env`, used for periodic dialogue refresh, clears
+only the language cache. Consequently, two distributed environments and two
+successive episodes cannot share memory, while evidence survives dialogue
+boundaries inside one episode.
 
-## Heavy-model hook policy
+## Ledger and readout
 
-Actual GA-VLN hooks are enabled only after:
+World points are quantized with floor division at the configured cell size.
+All patches that hit the same cell in one observation are averaged before one
+support update. A BLAKE2b-63 hash over seed, episode ID, and world cell gives
+order-independent bottom-k admission into fixed resident storage. Existing
+cells accumulate a running feature mean and support count.
 
-1. `evimem doctor` passes;
-2. official baseline G0 reproduces;
-3. A0 fixtures are captured;
-4. Torch BF16 parity tolerances are exercised in the staged environment.
+Finite horizons expire a cell when `current_action - last_action > horizon`;
+`route` retains it until episode reset. At readout, active world cells are
+transformed by the current pose, scatter-averaged into the GA-VLN BEV grid, and
+selected deterministically under `memory_token_budget`.
 
-This sequencing prevents an unverified memory rewrite from being mistaken for a
-scientific effect. Gaussian, learned value scoring, LoRA, and RxR policy changes
-are outside Phase 0.
+The reference NumPy contracts under `evimem.phase0` remain asset-free for
+testing. `evimem.torch_backend.EviMemTorchBackend` is the production
+implementation used by the model.
